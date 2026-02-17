@@ -2,8 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"os/exec"
-	"runtime"
 
 	"github.com/qj0r9j0vc2/kko/internal/local"
 	"github.com/qj0r9j0vc2/kko/internal/output"
@@ -125,24 +123,9 @@ func runFind(cmd *cobra.Command, args []string) error {
 
 	if findOpen && len(result.Documents) > 0 {
 		mapURL := fmt.Sprintf("https://map.kakao.com/link/map/%s", result.Documents[0].ID)
-		openURL(mapURL)
+		output.OpenURL(mapURL)
 		fmt.Printf("  %s %s\n\n", output.Muted("Opened:"), output.Link(mapURL))
 	}
 
 	return nil
-}
-
-func openURL(u string) {
-	var c *exec.Cmd
-	switch runtime.GOOS {
-	case "darwin":
-		c = exec.Command("open", u)
-	case "linux":
-		c = exec.Command("xdg-open", u)
-	case "windows":
-		c = exec.Command("rundll32", "url.dll,FileProtocolHandler", u)
-	}
-	if c != nil {
-		_ = c.Start()
-	}
 }

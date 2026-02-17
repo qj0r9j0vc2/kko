@@ -89,7 +89,7 @@ func runSearchWeb(ctx context.Context, svc *search.Service, opts search.SearchOp
 		fmt.Println()
 
 		if searchOpen == i+1 {
-			openURL(doc.URL)
+			output.OpenURL(doc.URL)
 			fmt.Printf("  %s\n\n", output.Success("Opened in browser"))
 		}
 	}
@@ -129,7 +129,7 @@ func runSearchBlog(ctx context.Context, svc *search.Service, opts search.SearchO
 		fmt.Println()
 
 		if searchOpen == i+1 {
-			openURL(doc.URL)
+			output.OpenURL(doc.URL)
 			fmt.Printf("  %s\n\n", output.Success("Opened in browser"))
 		}
 	}
@@ -169,7 +169,7 @@ func runSearchCafe(ctx context.Context, svc *search.Service, opts search.SearchO
 		fmt.Println()
 
 		if searchOpen == i+1 {
-			openURL(doc.URL)
+			output.OpenURL(doc.URL)
 			fmt.Printf("  %s\n\n", output.Success("Opened in browser"))
 		}
 	}

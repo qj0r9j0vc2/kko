@@ -9,11 +9,10 @@ import (
 	"net"
 	"net/http"
 	"net/url"
-	"os/exec"
-	"runtime"
 	"time"
 
 	"github.com/qj0r9j0vc2/kko/internal/config"
+	"github.com/qj0r9j0vc2/kko/internal/output"
 )
 
 const (
@@ -112,7 +111,7 @@ func (a *Authenticator) Login(ctx context.Context) (*config.Token, error) {
 
 	fmt.Printf("Opening browser for Kakao login...\n")
 	fmt.Printf("If browser doesn't open, visit:\n%s\n\n", authURL)
-	openBrowser(authURL)
+	output.OpenURL(authURL)
 
 	var code string
 	select {
@@ -266,17 +265,3 @@ func splitScopes(s string) []string {
 	return result
 }
 
-func openBrowser(url string) {
-	var cmd *exec.Cmd
-	switch runtime.GOOS {
-	case "darwin":
-		cmd = exec.Command("open", url)
-	case "linux":
-		cmd = exec.Command("xdg-open", url)
-	case "windows":
-		cmd = exec.Command("rundll32", "url.dll,FileProtocolHandler", url)
-	}
-	if cmd != nil {
-		_ = cmd.Start()
-	}
-}
