@@ -10,7 +10,7 @@ import (
 
 var (
 	ErrNotAuthenticated = errors.New("not authenticated: run `kko auth login`")
-	ErrNoAPIKey         = errors.New("API key not configured: run `kko config set api_key <KEY>`")
+	ErrNoAPIKey         = errors.New("API key not configured: run `kko auth set-api-key`")
 )
 
 type APIError struct {
@@ -24,7 +24,7 @@ func (e *APIError) Error() string {
 }
 
 var userMessages = map[int]string{
-	-401: "API key is invalid. Run `kko config set api_key <KEY>`",
+	-401: "API key is invalid. Run `kko auth set-api-key`",
 	-2:   "Invalid parameter. Check your input.",
 	-10:  "API limit exceeded. Try again later.",
 	-530: "System error on Kakao's side. Try again later.",

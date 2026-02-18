@@ -18,6 +18,7 @@ var (
 	appVersion string
 
 	cfg    *config.Config
+	store  config.CredentialStore
 	client *kakao.Client
 )
 
@@ -43,7 +44,10 @@ var rootCmd = &cobra.Command{
 			cfg.Output.Color = false
 		}
 
-		client = kakao.NewClient(cfg)
+		// Initialize credential store with keyring and fallback
+		store = config.NewKeyringStore()
+
+		client = kakao.NewClient(cfg, store)
 		return nil
 	},
 	SilenceUsage:  true,

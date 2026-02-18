@@ -19,7 +19,7 @@ func TestAPIError_UserMessage(t *testing.T) {
 		msg  string
 		want string
 	}{
-		{-401, "Unauthorized", "API key is invalid. Run `kko config set api_key <KEY>`"},
+		{-401, "Unauthorized", "API key is invalid. Run `kko auth set-api-key`"},
 		{-2, "Bad Request", "Invalid parameter. Check your input."},
 		{-10, "TooManyRequests", "API limit exceeded. Try again later."},
 		{-530, "Internal Error", "System error on Kakao's side. Try again later."},
