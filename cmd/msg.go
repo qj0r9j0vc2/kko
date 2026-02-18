@@ -16,7 +16,12 @@ var msgCmd = &cobra.Command{
 	Example: `  kko msg "heading to the office now"
   kko msg "meeting at 3pm" --link "https://zoom.us/j/123"
   kko msg "late 10 min" --to friend_uuid`,
-	Args: cobra.MinimumNArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if len(args) == 0 {
+			return usageError(cmd, "missing message text")
+		}
+		return nil
+	},
 	RunE: runMsg,
 }
 

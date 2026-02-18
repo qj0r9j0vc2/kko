@@ -1,8 +1,11 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
+	"sort"
 
+	"github.com/charmbracelet/huh"
 	"github.com/qj0r9j0vc2/kko/internal/local"
 	"github.com/qj0r9j0vc2/kko/internal/output"
 	"github.com/spf13/cobra"
@@ -75,10 +78,34 @@ func runFind(cmd *cobra.Command, args []string) error {
 	if findCategory != "" {
 		opts.Category = findCategory
 		result, err = svc.CategorySearch(ctx, opts)
-	} else {
-		if len(args) == 0 {
-			return fmt.Errorf("provide a search query or use --category")
+	} else if len(args) == 0 {
+		if !output.IsTerminal() {
+			return usageError(cmd, "missing search query\n\n  Available categories: "+categoryList())
 		}
+		// Interactive category picker
+		keys := make([]string, 0, len(local.CategoryCodes))
+		for k := range local.CategoryCodes {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
+		options := make([]huh.Option[string], len(keys))
+		for i, k := range keys {
+			options[i] = huh.NewOption(k, k)
+		}
+		var picked string
+		if err := huh.NewSelect[string]().
+			Title("Pick a category").
+			Options(options...).
+			Value(&picked).
+			Run(); err != nil {
+			if errors.Is(err, huh.ErrUserAborted) {
+				return nil
+			}
+			return err
+		}
+		opts.Category = picked
+		result, err = svc.CategorySearch(ctx, opts)
+	} else {
 		opts.Query = args[0]
 		result, err = svc.KeywordSearch(ctx, opts)
 	}
