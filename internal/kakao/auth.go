@@ -143,6 +143,9 @@ func (a *Authenticator) exchangeCode(_ context.Context, code, appKey, redirectUR
 		"redirect_uri": {redirectURI},
 		"code":         {code},
 	}
+	if a.cfg.ClientSecret != "" {
+		form.Set("client_secret", a.cfg.ClientSecret)
+	}
 
 	resp, err := http.PostForm(authBaseURL+tokenPath, form)
 	if err != nil {
@@ -191,6 +194,9 @@ func (a *Authenticator) refreshToken(_ context.Context, refreshToken string) (*c
 		"grant_type":    {"refresh_token"},
 		"client_id":     {appKey},
 		"refresh_token": {refreshToken},
+	}
+	if a.cfg.ClientSecret != "" {
+		form.Set("client_secret", a.cfg.ClientSecret)
 	}
 
 	resp, err := http.PostForm(authBaseURL+tokenPath, form)
