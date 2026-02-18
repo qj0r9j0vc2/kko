@@ -11,11 +11,57 @@ import (
 	"github.com/qj0r9j0vc2/kko/internal/config"
 )
 
+// mockStore is a simple mock implementation for testing
+type mockStore struct {
+	apiKey       string
+	clientSecret string
+	token        *config.Token
+}
+
+func (m *mockStore) LoadToken() (*config.Token, error) {
+	return m.token, nil
+}
+
+func (m *mockStore) SaveToken(token *config.Token) error {
+	m.token = token
+	return nil
+}
+
+func (m *mockStore) DeleteToken() error {
+	m.token = nil
+	return nil
+}
+
+func (m *mockStore) LoadAPIKey() (string, error) {
+	if m.apiKey == "" {
+		return "", config.ErrNoAPIKey
+	}
+	return m.apiKey, nil
+}
+
+func (m *mockStore) SaveAPIKey(key string) error {
+	m.apiKey = key
+	return nil
+}
+
+func (m *mockStore) LoadClientSecret() (string, error) {
+	if m.clientSecret == "" {
+		return "", config.ErrNoClientSecret
+	}
+	return m.clientSecret, nil
+}
+
+func (m *mockStore) SaveClientSecret(secret string) error {
+	m.clientSecret = secret
+	return nil
+}
+
 func testClient(t *testing.T, handler http.Handler) (*Client, *httptest.Server) {
 	t.Helper()
 	srv := httptest.NewServer(handler)
-	cfg := &config.Config{APIKey: "test-api-key"}
-	c := NewClient(cfg)
+	cfg := &config.Config{}
+	store := &mockStore{apiKey: "test-api-key"}
+	c := NewClient(cfg, store)
 	return c, srv
 }
 
@@ -37,8 +83,9 @@ func TestClient_Get_APIKeyAuth(t *testing.T) {
 }
 
 func TestClient_Get_NoAPIKey(t *testing.T) {
-	cfg := &config.Config{APIKey: ""}
-	c := NewClient(cfg)
+	cfg := &config.Config{}
+	store := &mockStore{apiKey: ""} // Empty API key
+	c := NewClient(cfg, store)
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(200)
 	}))

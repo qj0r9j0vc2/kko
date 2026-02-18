@@ -52,12 +52,10 @@ func (a *Authenticator) EnsureValidToken(ctx context.Context) (string, error) {
 }
 
 func (a *Authenticator) Login(ctx context.Context) (*config.Token, error) {
-	appKey := a.cfg.AppKey
-	if appKey == "" {
-		appKey = a.cfg.APIKey
-	}
-	if appKey == "" {
-		return nil, ErrNoAPIKey
+	// Load API key from store
+	appKey, err := a.store.LoadAPIKey()
+	if err != nil {
+		return nil, config.ErrNoAPIKey
 	}
 
 	redirectURI := a.cfg.RedirectURI
@@ -143,8 +141,11 @@ func (a *Authenticator) exchangeCode(_ context.Context, code, appKey, redirectUR
 		"redirect_uri": {redirectURI},
 		"code":         {code},
 	}
-	if a.cfg.ClientSecret != "" {
-		form.Set("client_secret", a.cfg.ClientSecret)
+
+	// Load client secret from store (optional)
+	clientSecret, err := a.store.LoadClientSecret()
+	if err == nil && clientSecret != "" {
+		form.Set("client_secret", clientSecret)
 	}
 
 	resp, err := http.PostForm(authBaseURL+tokenPath, form)
@@ -185,9 +186,10 @@ func (a *Authenticator) exchangeCode(_ context.Context, code, appKey, redirectUR
 }
 
 func (a *Authenticator) refreshToken(_ context.Context, refreshToken string) (*config.Token, error) {
-	appKey := a.cfg.AppKey
-	if appKey == "" {
-		appKey = a.cfg.APIKey
+	// Load API key from store
+	appKey, err := a.store.LoadAPIKey()
+	if err != nil {
+		return nil, config.ErrNoAPIKey
 	}
 
 	form := url.Values{
@@ -195,8 +197,11 @@ func (a *Authenticator) refreshToken(_ context.Context, refreshToken string) (*c
 		"client_id":     {appKey},
 		"refresh_token": {refreshToken},
 	}
-	if a.cfg.ClientSecret != "" {
-		form.Set("client_secret", a.cfg.ClientSecret)
+
+	// Load client secret from store (optional)
+	clientSecret, err := a.store.LoadClientSecret()
+	if err == nil && clientSecret != "" {
+		form.Set("client_secret", clientSecret)
 	}
 
 	resp, err := http.PostForm(authBaseURL+tokenPath, form)

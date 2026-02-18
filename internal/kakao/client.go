@@ -17,20 +17,19 @@ import (
 
 type Client struct {
 	http        *http.Client
-	apiKey      string
+	store       config.CredentialStore
 	auth        *Authenticator
 	rateLimiter *rate.Limiter
 	logger      *slog.Logger
 	cfg         *config.Config
 }
 
-func NewClient(cfg *config.Config) *Client {
-	store := config.NewKeyringStore()
+func NewClient(cfg *config.Config, store config.CredentialStore) *Client {
 	return &Client{
 		http: &http.Client{
 			Timeout: 30 * time.Second,
 		},
-		apiKey:      cfg.APIKey,
+		store:       store,
 		auth:        NewAuthenticator(cfg, store),
 		rateLimiter: rate.NewLimiter(rate.Every(100*time.Millisecond), 10),
 		logger:      slog.Default(),
@@ -186,10 +185,12 @@ func (c *Client) do(ctx context.Context, cfg *requestConfig, fullURL string, ext
 		}
 		req.Header.Set("Authorization", "Bearer "+token)
 	} else {
-		if c.apiKey == "" {
-			return nil, ErrNoAPIKey
+		// Fetch API key from store on-demand
+		apiKey, err := c.store.LoadAPIKey()
+		if err != nil {
+			return nil, config.ErrNoAPIKey
 		}
-		req.Header.Set("Authorization", "KakaoAK "+c.apiKey)
+		req.Header.Set("Authorization", "KakaoAK "+apiKey)
 	}
 
 	for k, v := range extraHeaders {

@@ -9,9 +9,6 @@ import (
 )
 
 type Config struct {
-	APIKey          string            `mapstructure:"api_key"`
-	AppKey          string            `mapstructure:"app_key"`
-	ClientSecret    string            `mapstructure:"client_secret"`
 	RedirectURI     string            `mapstructure:"redirect_uri"`
 	DefaultLocation Location          `mapstructure:"default_location"`
 	Output          OutputConfig      `mapstructure:"output"`
