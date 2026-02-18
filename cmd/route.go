@@ -18,7 +18,17 @@ var routeCmd = &cobra.Command{
 	Example: `  kko route "hakdong station" "euljiro 3-ga"
   kko route home office
   kko route home office --depart "08:30"`,
-	Args: cobra.ExactArgs(2),
+	Args: func(cmd *cobra.Command, args []string) error {
+		switch {
+		case len(args) == 0:
+			return usageError(cmd, "missing origin and destination")
+		case len(args) == 1:
+			return usageError(cmd, "missing destination")
+		case len(args) > 2:
+			return usageError(cmd, "too many arguments (expected origin and destination)")
+		}
+		return nil
+	},
 	RunE: runRoute,
 }
 
@@ -46,12 +56,12 @@ func runRoute(cmd *cobra.Command, args []string) error {
 
 	ox, oy, err := localSvc.ResolveLocation(ctx, origin)
 	if err != nil {
-		return fmt.Errorf("resolve origin %q: %w", origin, err)
+		return fmt.Errorf("could not find %q: %w", origin, err)
 	}
 
 	dx, dy, err := localSvc.ResolveLocation(ctx, dest)
 	if err != nil {
-		return fmt.Errorf("resolve destination %q: %w", dest, err)
+		return fmt.Errorf("could not find %q: %w", dest, err)
 	}
 
 	var departTime string

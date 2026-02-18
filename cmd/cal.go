@@ -1,9 +1,13 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
+	"github.com/charmbracelet/huh"
 	"github.com/qj0r9j0vc2/kko/internal/calendar"
 	"github.com/qj0r9j0vc2/kko/internal/output"
 	"github.com/spf13/cobra"
@@ -42,8 +46,10 @@ var calListCmd = &cobra.Command{
 var calAddCmd = &cobra.Command{
 	Use:   "add [title]",
 	Short: "Create a new event",
-	Args:  cobra.MinimumNArgs(1),
-	RunE:  runCalAdd,
+	Example: `  kko cal add "Team standup" --at 14:00
+  kko cal add "Lunch" --at 12:00 --dur 90
+  kko cal add "Holiday" --date 2026-03-01 --all-day`,
+	RunE: runCalAdd,
 }
 
 var calRmCmd = &cobra.Command{
@@ -187,7 +193,49 @@ func runCalAdd(cmd *cobra.Command, args []string) error {
 	ctx := cmd.Context()
 	svc := calendar.NewService(client)
 
-	title := args[0]
+	title := strings.Join(args, " ")
+
+	// Interactive form when no title given and running in a terminal
+	if title == "" {
+		if !output.IsTerminal() {
+			return usageError(cmd, "missing event title")
+		}
+		var dateStr, timeStr, durStr, descStr string
+		form := huh.NewForm(
+			huh.NewGroup(
+				huh.NewInput().Title("Title").Value(&title).Validate(func(s string) error {
+					if strings.TrimSpace(s) == "" {
+						return fmt.Errorf("title is required")
+					}
+					return nil
+				}),
+				huh.NewInput().Title("Date").Value(&dateStr).Placeholder("YYYY-MM-DD, default: today"),
+				huh.NewInput().Title("Time").Value(&timeStr).Placeholder("HH:MM, leave empty for all-day"),
+				huh.NewInput().Title("Duration (min)").Value(&durStr).Placeholder("60"),
+				huh.NewInput().Title("Description").Value(&descStr).Placeholder("optional"),
+			),
+		)
+		if err := form.Run(); err != nil {
+			if errors.Is(err, huh.ErrUserAborted) {
+				return nil
+			}
+			return err
+		}
+		if dateStr != "" {
+			calDate = dateStr
+		}
+		if timeStr != "" {
+			calAt = timeStr
+		}
+		if durStr != "" {
+			d, err := strconv.Atoi(durStr)
+			if err != nil {
+				return fmt.Errorf("invalid duration: %w", err)
+			}
+			calDur = d
+		}
+		calDesc = descStr
+	}
 
 	date := time.Now()
 	if calDate != "" {

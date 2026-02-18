@@ -28,13 +28,23 @@ var userMessages = map[int]string{
 	-2:   "Invalid parameter. Check your input.",
 	-10:  "API limit exceeded. Try again later.",
 	-530: "System error on Kakao's side. Try again later.",
+	0:    "Permission denied. Check your API key has the required permissions.",
+	-1:   "Invalid request. Check your input and try again.",
+	-5:   "Endpoint not found. You may need to update kko.",
+	-9:   "Not an allowed service. Enable the API in your Kakao app settings.",
 }
 
 func (e *APIError) UserMessage() string {
 	if msg, ok := userMessages[e.Code]; ok {
 		return msg
 	}
-	return e.Message
+	if e.Status == 401 || e.Status == 403 {
+		return "Permission denied. Check your API key has the required permissions."
+	}
+	if e.Message != "" {
+		return e.Message
+	}
+	return fmt.Sprintf("unexpected error (HTTP %d)", e.Status)
 }
 
 func ParseAPIError(resp *http.Response) error {

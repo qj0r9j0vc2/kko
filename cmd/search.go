@@ -16,7 +16,12 @@ var searchCmd = &cobra.Command{
 	Example: `  kko search "cosmos blockchain validator"
   kko search "golang error handling" --type blog --limit 3
   kko search "cosmos" --open 1`,
-	Args: cobra.MinimumNArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if len(args) == 0 {
+			return usageError(cmd, "missing search query")
+		}
+		return nil
+	},
 	RunE: runSearch,
 }
 
